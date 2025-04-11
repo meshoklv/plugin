@@ -1,1 +1,35 @@
+name: Build JUCE VST3 Plugin
 
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Install Dependencies
+      run: sudo apt-get update && sudo apt-get install -y libfreetype6-dev libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxcomposite-dev libasound2-dev libcurl4-openssl-dev ninja-build
+
+    - name: Clone JUCE
+      run: git clone --depth 1 --branch 7.0.9 https://github.com/juce-framework/JUCE.git
+
+    - name: Build Plugin
+      run: |
+        mkdir -p build
+        cd build
+        cmake ../ -B. -DJUCE_ROOT=../JUCE -DCMAKE_BUILD_TYPE=Release
+        cmake --build . --config Release
+
+    - name: Upload Plugin
+      uses: actions/upload-artifact@v3
+      with:
+        name: SerumLitePlugin
+        path: |
+          build/*.vst3
